@@ -64,6 +64,13 @@ class RouterAgent:
                 if raw_text.startswith("```"):
                     raw_text = raw_text.strip("`").replace("json", "").strip()
                 parsed = json.loads(raw_text)
+                # Chuẩn hóa giá trị chuỗi "null", "none", "None" thành None thực sự
+                if isinstance(parsed, dict) and "entities" in parsed and isinstance(parsed["entities"], dict):
+                    clean_entities = {}
+                    for k, v in parsed["entities"].items():
+                        if v and str(v).strip().lower() not in ["null", "none", "không", ""]:
+                            clean_entities[k] = v.strip() if isinstance(v, str) else v
+                    parsed["entities"] = clean_entities
                 return parsed
         except Exception as e:
             logger.warning("OLM chưa sẵn sàng hoặc timeout khi bóc tách thực thể: %s", e)

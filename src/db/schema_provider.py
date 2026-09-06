@@ -92,6 +92,20 @@ BUSINESS_SEMANTIC_RULES = """
     - Các trường ngày: s.enrollment_date, a.scheduled_date là kiểu Neo4j Date.
     - Khi so sánh ngày, BẮT BUỘC dùng hàm date('YYYY-MM-DD') (ví dụ: a.scheduled_date = date('2024-09-02')). TUYỆT ĐỐI KHÔNG so sánh trực tiếp Date với chuỗi String.
     - TUYỆT ĐỐI KHÔNG tự thêm điều kiện ngày tháng (như s.enrollment_date >= ...) nếu người dùng không yêu cầu thời gian cụ thể!
+
+15. "Hỏi số lượng / Đếm tổng số (Số sinh viên..., Có bao nhiêu...)":
+    Khi câu hỏi yêu cầu đếm số lượng (bắt đầu bằng "Số sinh viên...", "Có bao nhiêu...", "Thống kê số lượng..."):
+    BẮT BUỘC dùng hàm đếm: RETURN count(DISTINCT s) AS so_luong_sinh_vien.
+    TUYỆT ĐỐI KHÔNG trả về danh sách mã kèm LIMIT khi người dùng hỏi "Số sinh viên"!
+    Ví dụ:
+    - "Số sinh viên đang bảo lưu":
+      MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[st:HAS_STATUS]->(s)
+      WHERE st.status = 'SUSPENDED' AND st.effective_to IS NULL
+      RETURN count(DISTINCT s) AS so_sinh_vien_dang_bao_luu
+    - "Số sinh viên ngành SE":
+      MATCH (s:Student)
+      WHERE s.program_code = 'SE'
+      RETURN count(DISTINCT s) AS so_sinh_vien_se
 """
 
 

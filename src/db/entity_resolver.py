@@ -27,7 +27,13 @@ def remove_vietnamese_accents(text: str) -> str:
     return "".join(c for c in normalized if unicodedata.category(c) != "Mn").lower().strip()
 
 
-STOP_WORDS = {"hồ", "sơ", "sinh", "viên", "thông", "tin", "tra", "cứu", "tìm", "xem", "của", "ở", "tại", "ngành", "lớp", "học", "bạn", "em"}
+STOP_WORDS = {
+    "hồ", "sơ", "sinh", "viên", "thông", "tin", "tra", "cứu", "tìm", "xem", "của", "ở", "tại", 
+    "ngành", "lớp", "học", "bạn", "em", "thầy", "cô", "giảng", "dạy",
+    "đang", "đã", "từng", "bị", "được", "có", "các", "những", "danh", "sách", "số", "lượng", 
+    "bao", "nhiêu", "nào", "mấy", "bảo", "lưu", "thôi", "nghỉ", "vắng", "cấm", "thi", "điểm",
+    "khóa", "kỳ", "toàn", "bộ", "tất", "cả", "ai", "người"
+}
 
 
 class EntityResolver:
@@ -105,11 +111,15 @@ class EntityResolver:
         raw_words = input_text.strip().split()
         meaningful_words = [w for w in raw_words if w.lower() not in STOP_WORDS]
         if not meaningful_words:
-            meaningful_words = raw_words
+            return None
         cleaned_input = " ".join(meaningful_words)
 
         q_clean = remove_vietnamese_accents(cleaned_input)
         q_words = set(q_clean.split())
+
+        # Nếu sau khi loại bỏ stop words chỉ còn chuỗi quá ngắn (< 3 ký tự) thì không match
+        if len(q_clean) < 3:
+            return None
 
         candidates: List[Tuple[float, Dict[str, Any]]] = []
 
@@ -128,25 +138,29 @@ class EntityResolver:
                 candidates.append((score, p))
                 continue
 
-            # Trường hợp 3: Chuỗi truy vấn là chuỗi con (substring) của tên trong DB
-            if len(q_clean) >= 3 and q_clean in cand_clean:
-                candidates.append((0.92, p))
+            # Trường hợp 3: Chuỗi truy vấn gồm ít nhất 2 từ và là chuỗi con (substring) của tên trong DB
+            if len(q_words) >= 2 and q_clean in cand_clean:
+                score = 0.85 + 0.10 * (len(q_clean) / len(cand_clean))
+                candidates.append((score, p))
                 continue
 
-            # Trường hợp 4: Khớp tên chính (từ cuối cùng) và có thêm từ khác tương đồng
-            if q_words and cand_words:
+            # Trường hợp 4: Khớp tên chính (từ cuối cùng) - Chỉ xét nếu câu hỏi có ít nhất 2 từ hoặc tỷ lệ tương đồng tổng thể cao
+            if len(q_words) >= 2 and cand_words:
                 last_q = q_clean.split()[-1]
                 last_cand = cand_clean.split()[-1]
                 if last_q == last_cand and len(last_q) >= 2:
                     overlap = len(q_words.intersection(cand_words)) / len(q_words)
-                    score = 0.70 + 0.20 * overlap
-                    candidates.append((score, p))
-                    continue
+                    ratio = difflib.SequenceMatcher(None, q_clean, cand_clean).ratio()
+                    if ratio >= 0.5:
+                        score = 0.70 + 0.20 * overlap
+                        candidates.append((score, p))
+                        continue
 
             # Trường hợp 5: Fuzzy SequenceMatcher (sai chính tả 1-2 ký tự)
-            ratio = difflib.SequenceMatcher(None, q_clean, cand_clean).ratio()
-            if ratio >= threshold:
-                candidates.append((ratio, p))
+            if len(q_clean) >= 4:
+                ratio = difflib.SequenceMatcher(None, q_clean, cand_clean).ratio()
+                if ratio >= threshold:
+                    candidates.append((ratio, p))
 
         if candidates:
             candidates.sort(key=lambda x: x[0], reverse=True)
@@ -164,7 +178,10 @@ class EntityResolver:
         Trả về các thực thể đã được ánh xạ chuẩn xác với Database.
         """
         self._refresh_cache_if_needed()
-        resolved = dict(extracted_entities or {})
+        resolved = {}
+        for k, v in (extracted_entities or {}).items():
+            if v and str(v).strip().lower() not in ["null", "none", "không", ""]:
+                resolved[k] = v.strip() if isinstance(v, str) else v
 
         # 1. Thử ánh xạ từ student_name nếu Router đã bóc tách
         target_name = resolved.get("student_name")
@@ -177,6 +194,9 @@ class EntityResolver:
                 if matched.get("program_code"):
                     resolved["matched_program_code"] = matched["program_code"]
                 return resolved
+            else:
+                # Nếu không khớp người nào trong DB, xóa trường student_name để tránh ép buộc sai
+                resolved.pop("student_name", None)
 
         # 2. Nếu Router chưa bắt được hoặc bắt sai, thử quét cả câu hỏi loại bỏ stop words
         matched = self.find_best_person_match(user_question, threshold=0.75)

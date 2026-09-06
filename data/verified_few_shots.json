@@ -54,6 +54,12 @@
     "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[:STUDIES_AT]->(o:Organization)\nWHERE toLower(o.org_name) CONTAINS 'hồ chí minh'\n   OR toLower(o.org_name) CONTAINS 'hcm'\n   OR toLower(o.org_name) CONTAINS 'đà nẵng'\n   OR o.org_code IN ['FPTU-HCM', 'FPTU-DN']\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       o.org_name AS co_so\nLIMIT 50"
   },
   {
+    "id": "status_count_01",
+    "question": "số sinh viên đang bảo lưu",
+    "intent": "status_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[st:HAS_STATUS]->(s)\nWHERE st.status = 'SUSPENDED' AND st.effective_to IS NULL\nRETURN count(DISTINCT s) AS so_sinh_vien_dang_bao_luu"
+  },
+  {
     "id": "status_01",
     "question": "Danh sách sinh viên đang bảo lưu trong học kỳ này",
     "intent": "status_query",
