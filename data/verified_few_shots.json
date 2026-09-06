@@ -148,5 +148,11 @@
     "question": "hồ sơ sinh viên Lê Khắc Tiệp",
     "intent": "verified_user_query",
     "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nWHERE toLower(p.full_name) CONTAINS toLower('Lê Khắc Tiệp')\nRETURN s.student_code AS ma_sinh_vien, p.full_name AS ho_va_ten, s.program_code AS ma_nganh, s.enrollment_date AS ngay_nhap_hoc\nLIMIT 50"
+  },
+  {
+    "id": "dyn_026",
+    "question": "Hồ sơ sinh viên Đặng Quốc Huy",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nWHERE toLower(p.full_name) CONTAINS toLower('Đặng Quốc Huy')\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       s.enrollment_date AS ngay_nhap_hoc,\n       p.email AS email,\n       p.phone AS so_dien_thoai,\n       s.is_active AS trang_thai\nLIMIT 50"
   }
 ]
