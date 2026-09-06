@@ -114,6 +114,24 @@ BUSINESS_SEMANTIC_RULES = """
     MATCH (m:Major {major_code: 'SE'})
     RETURN m.major_code AS ma_nganh, m.major_name AS ten_nganh, m.major_name_en AS ten_tieng_anh, m.degree AS van_bang, m.description AS mo_ta
     TUYỆT ĐỐI KHÔNG truy vấn bảng Student khi người dùng chỉ hỏi khái niệm/mã ngành!
+
+17. "Kiểm tra sinh viên cụ thể có bị cấm thi không (Võ Văn Phúc có bị cấm thi không, sinh viên X có được thi không...)":
+    Cấm thi xảy ra khi tỷ lệ vắng >= 20.0% ở môn học.
+    BẮT BUỘC trả về đầy đủ số buổi vắng, tổng số buổi và kết luận điều kiện thi.
+    TUYỆT ĐỐI KHÔNG tự thêm điều kiện lớp học cụ thể hay cơ sở nếu câu hỏi không yêu cầu!
+    Mẫu chuẩn:
+    MATCH (p:Person)-[:HAS_ROLE]->(s:Student)
+    WHERE p.full_name = 'Võ Văn Phúc'
+    MATCH (s)-[part:PARTICIPATED_IN]->(a:Activity)-[:PART_OF]->(c:Class)
+    WITH p, s, c, count(a) AS total_sessions, count(CASE WHEN part.attendance_status = 'ABSENT' THEN 1 END) AS absent_count
+    WITH p, s, c, total_sessions, absent_count, round(100.0 * absent_count / total_sessions, 1) AS absent_rate
+    RETURN p.full_name AS ho_va_ten,
+           s.student_code AS ma_sinh_vien,
+           c.class_code AS ma_lop,
+           absent_count AS so_buoi_vang,
+           total_sessions AS tong_so_buoi,
+           absent_rate AS ti_le_vang_phan_tram,
+           CASE WHEN absent_rate >= 20.0 THEN 'CẤM THI (Vắng >= 20%)' ELSE 'ĐỦ ĐIỀU KIỆN THI' END AS ket_luan
 """
 
 

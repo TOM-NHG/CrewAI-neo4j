@@ -12,6 +12,12 @@
     "cypher": "MATCH (m:Major)\nWHERE toLower(m.major_name) CONTAINS 'kỹ thuật phần mềm' OR m.major_code = 'SE'\nRETURN m.major_code AS ma_nganh, m.major_name AS ten_nganh, m.major_name_en AS ten_tieng_anh, m.description AS mo_ta"
   },
   {
+    "id": "warning_student_01",
+    "question": "võ văn phúc có bị cấm thi không",
+    "intent": "warning_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nWHERE p.full_name = 'Võ Văn Phúc'\nMATCH (s)-[part:PARTICIPATED_IN]->(a:Activity)-[:PART_OF]->(c:Class)\nWITH p, s, c, count(a) AS total_sessions, count(CASE WHEN part.attendance_status = 'ABSENT' THEN 1 END) AS absent_count\nWITH p, s, c, total_sessions, absent_count, round(100.0 * absent_count / total_sessions, 1) AS absent_rate\nRETURN p.full_name AS ho_va_ten,\n       s.student_code AS ma_sinh_vien,\n       c.class_code AS ma_lop,\n       absent_count AS so_buoi_vang,\n       total_sessions AS tong_so_buoi,\n       absent_rate AS ti_le_vang_phan_tram,\n       CASE WHEN absent_rate >= 20.0 THEN 'CẤM THI (Vắng >= 20%)' ELSE 'ĐỦ ĐIỀU KIỆN THI' END AS ket_luan"
+  },
+  {
     "id": "att_01",
     "question": "Tìm những sinh viên vắng mặt ở lớp PRO192_SE1801 ngày 2024-09-02",
     "intent": "attendance_query",
