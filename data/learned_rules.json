@@ -1,0 +1,11 @@
+[
+  "TUYỆT ĐỐI KHÔNG nối trực tiếp (Employee)-[:TEACHES]->(Student). Bắt buộc phải nối qua (:Activity): (Employee)-[:LEADS]->(Activity)<-[:PARTICIPATED_IN]-(Student).",
+  "Khi người dùng hỏi 'sinh viên vắng mặt', chỉ lọc part.attendance_status = 'ABSENT', không tính trạng thái 'LATE' là vắng.",
+  "Khi lọc trạng thái 'đang bảo lưu', bắt buộc phải kiểm tra st.status = 'SUSPENDED' VÀ st.effective_to IS NULL.",
+  "Khi tìm kiếm theo tên người tiếng Việt, BẮT BUỘC GIỮ NGUYÊN ĐẦY ĐỦ DẤU (ví dụ 'duyên đặng' có dấu 'ê', KHÔNG được bỏ dấu thành 'duyen'). Luôn dùng toLower(...) CONTAINS toLower(...).",
+  "Họ tên (full_name), email, số điện thoại nằm trên nút (:Person). Nút (:Student) chỉ chứa mã sinh viên student_code, ngày nhập học enrollment_date, mã ngành program_code và is_active. BẮT BUỘC MATCH (p:Person)-[:HAS_ROLE]->(s:Student) để lấy họ tên sinh viên.",
+  "Ngành học sinh viên (SE, AI, IA, BA, ...) được lưu TRỰC TIẾP tại s.program_code trên nút Student. TUYỆT ĐỐI KHÔNG tìm ngành qua (:Organization) hay (:Major) vì Organization chỉ là trường/phân hiệu/khoa. Mẫu chuẩn: MATCH (p:Person)-[:HAS_ROLE]->(s:Student) WHERE s.program_code = 'SE'.",
+  "Cơ sở đào tạo (Hà Nội, TP.HCM, Đà Nẵng, Cần Thơ, Quy Nhơn) nối qua (s:Student)-[:STUDIES_AT]->(o:Organization). BẮT BUỘC dùng toLower(o.org_name) CONTAINS '...' hoặc o.org_code ('FPTU-HN', 'FPTU-HCM', 'FPTU-DN'). TUYỆT ĐỐI KHÔNG so sánh bằng tuyệt đối o.org_name = 'Hà Nội'.",
+  "Trường ngày tháng (s.enrollment_date, a.scheduled_date) là kiểu Date trong Neo4j. TUYỆT ĐỐI KHÔNG tự bịa điều kiện thời gian (như s.enrollment_date >= ...) nếu câu hỏi không yêu cầu.",
+  "Mọi câu lệnh truy vấn danh sách đều phải có mệnh đề LIMIT (mặc định LIMIT 50 nếu người dùng không yêu cầu số lượng cụ thể)."
+]

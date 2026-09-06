@@ -1,0 +1,152 @@
+[
+  {
+    "id": "att_01",
+    "question": "Tìm những sinh viên vắng mặt ở lớp PRO192_SE1801 ngày 2024-09-02",
+    "intent": "attendance_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[part:PARTICIPATED_IN]->(a:Activity)\nWHERE a.class_code = 'PRO192_SE1801'\n  AND a.scheduled_date = date('2024-09-02')\n  AND part.attendance_status = 'ABSENT'\nRETURN p.full_name AS student_name, s.student_code AS student_code, a.activity_name AS activity, part.note AS note\nLIMIT 50"
+  },
+  {
+    "id": "att_02",
+    "question": "Cảnh báo những sinh viên có nguy cơ cấm thi vì vắng quá 20% số buổi môn PRO192_SE1801",
+    "intent": "warning_query",
+    "cypher": "MATCH (c:Class {class_code: 'PRO192_SE1801'})<-[:PART_OF]-(all_act:Activity)\nWITH c, count(DISTINCT all_act) AS total_sessions\nMATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[part:PARTICIPATED_IN]->(a:Activity)-[:PART_OF]->(c)\nWHERE part.attendance_status = 'ABSENT'\nWITH p, s, c, total_sessions, count(part) AS absent_count,\n     round(100.0 * count(part) / total_sessions, 1) AS absent_rate\nWHERE absent_rate >= 20.0\nRETURN p.full_name AS student_name, s.student_code AS student_code,\n       absent_count, total_sessions, absent_rate AS `absent_percentage_%`\nORDER BY absent_rate DESC\nLIMIT 50"
+  },
+  {
+    "id": "att_03",
+    "question": "Danh sách sinh viên đi muộn trong các buổi học",
+    "intent": "attendance_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[part:PARTICIPATED_IN]->(a:Activity)\nWHERE part.attendance_status = 'LATE'\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       a.class_code AS ma_lop,\n       a.activity_name AS buoi_hoc,\n       a.scheduled_date AS ngay_hoc,\n       part.note AS ghi_chu\nORDER BY a.scheduled_date DESC\nLIMIT 50"
+  },
+  {
+    "id": "profile_01",
+    "question": "Hồ sơ sinh viên Duyên Đặng",
+    "intent": "student_profile_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nWHERE toLower(p.full_name) CONTAINS toLower('Duyên Đặng') OR toLower(p.full_name) CONTAINS toLower('Mỹ Duyên')\nOPTIONAL MATCH (s)-[:STUDIES_AT]->(o:Organization)\nOPTIONAL MATCH (s)-[st:HAS_STATUS]->(s)\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS nganh_hoc,\n       coalesce(st.status, 'ACTIVE') AS trang_thai,\n       p.email AS email,\n       p.phone AS so_dien_thoai,\n       s.enrollment_date AS ngay_nhap_hoc,\n       o.org_name AS co_so_dao_tao\nLIMIT 10"
+  },
+  {
+    "id": "profile_02",
+    "question": "Tra cứu thông tin sinh viên mã SE180001",
+    "intent": "student_profile_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student {student_code: 'SE180001'})\nOPTIONAL MATCH (s)-[:STUDIES_AT]->(o:Organization)\nOPTIONAL MATCH (s)-[st:HAS_STATUS]->(s)\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS nganh_hoc,\n       coalesce(st.status, 'ACTIVE') AS trang_thai,\n       p.email AS email,\n       p.phone AS so_dien_thoai,\n       s.enrollment_date AS ngay_nhap_hoc,\n       o.org_name AS co_so_dao_tao\nLIMIT 1"
+  },
+  {
+    "id": "program_01",
+    "question": "những sinh viên ngành SE",
+    "intent": "student_program_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nWHERE s.program_code = 'SE'\nOPTIONAL MATCH (s)-[:STUDIES_AT]->(o:Organization)\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       s.enrollment_date AS ngay_nhap_hoc,\n       o.org_name AS co_so\nLIMIT 50"
+  },
+  {
+    "id": "campus_01",
+    "question": "sinh viên ngành SE ở Hà nội",
+    "intent": "student_campus_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[:STUDIES_AT]->(o:Organization)\nWHERE s.program_code = 'SE'\n  AND (toLower(o.org_name) CONTAINS 'hà nội' OR o.org_code = 'FPTU-HN')\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       s.enrollment_date AS ngay_nhap_hoc,\n       o.org_name AS co_so\nLIMIT 50"
+  },
+  {
+    "id": "campus_02",
+    "question": "SINH VIÊN NGÀNH SE CƠ SỞ HÀ NỘI",
+    "intent": "student_campus_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[:STUDIES_AT]->(o:Organization)\nWHERE s.program_code = 'SE'\n  AND (toLower(o.org_name) CONTAINS 'hà nội' OR o.org_code = 'FPTU-HN')\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       s.enrollment_date AS ngay_nhap_hoc,\n       o.org_name AS co_so\nLIMIT 50"
+  },
+  {
+    "id": "campus_03",
+    "question": "Danh sách sinh viên học tại cơ sở TP.HCM hoặc Đà Nẵng",
+    "intent": "student_campus_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[:STUDIES_AT]->(o:Organization)\nWHERE toLower(o.org_name) CONTAINS 'hồ chí minh'\n   OR toLower(o.org_name) CONTAINS 'hcm'\n   OR toLower(o.org_name) CONTAINS 'đà nẵng'\n   OR o.org_code IN ['FPTU-HCM', 'FPTU-DN']\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       o.org_name AS co_so\nLIMIT 50"
+  },
+  {
+    "id": "status_01",
+    "question": "Danh sách sinh viên đang bảo lưu trong học kỳ này",
+    "intent": "status_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[st:HAS_STATUS]->(s)\nWHERE st.status = 'SUSPENDED' AND st.effective_to IS NULL\nRETURN p.full_name AS student_name, s.student_code AS student_code,\n       st.effective_from AS suspended_from, st.note AS reason\nLIMIT 50"
+  },
+  {
+    "id": "status_02",
+    "question": "Những sinh viên nào từng bảo lưu rồi quay lại học?",
+    "intent": "status_history_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[st:HAS_STATUS]->(s)\nWHERE st.status = 'SUSPENDED' AND st.effective_to IS NOT NULL\nRETURN p.full_name AS student_name, s.student_code AS student_code,\n       st.effective_from AS suspended_from, st.effective_to AS returned_at, st.note AS note\nLIMIT 50"
+  },
+  {
+    "id": "status_03",
+    "question": "Danh sách sinh viên đã thôi học",
+    "intent": "status_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[st:HAS_STATUS]->(s)\nWHERE st.status = 'DROPOUT'\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       st.effective_from AS ngay_thoi_hoc,\n       st.note AS ly_do\nLIMIT 50"
+  },
+  {
+    "id": "lecturer_01",
+    "question": "Giảng viên Nguyễn Văn An đang dạy những lớp và buổi học nào?",
+    "intent": "lecturer_teaching_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(e:Employee)-[lead:LEADS]->(a:Activity)-[:PART_OF]->(c:Class)\nWHERE toLower(p.full_name) CONTAINS toLower('Nguyễn Văn An')\nRETURN c.class_code AS class_code, c.class_name AS class_name,\n       a.activity_name AS activity_name, a.scheduled_date AS date, lead.role AS role\nORDER BY a.scheduled_date ASC\nLIMIT 50"
+  },
+  {
+    "id": "dual_01",
+    "question": "Ai là sinh viên vừa đi học vừa làm trợ giảng (TA)?",
+    "intent": "dual_role_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nMATCH (p)-[:HAS_ROLE]->(e:Employee)-[r:ASSIGNED_TO_DEPT]->(d:Department)\nWHERE r.position_code = 'TA'\nRETURN p.full_name AS full_name, s.student_code AS student_code,\n       e.employee_code AS employee_code, d.dept_name AS department\nLIMIT 50"
+  },
+  {
+    "id": "grade_01",
+    "question": "Xem điểm số và xếp loại của sinh viên Nguyễn Anh Tuấn",
+    "intent": "grade_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[part:PARTICIPATED_IN]->(a:Activity)-[:PART_OF]->(c:Class)\nWHERE toLower(p.full_name) CONTAINS toLower('Nguyễn Anh Tuấn')\nRETURN c.class_code AS class_code, a.activity_name AS activity,\n       a.scheduled_date AS date, part.quiz_score AS quiz,\n       part.assignment_score AS assignment, part.grade AS grade\nORDER BY a.scheduled_date ASC\nLIMIT 50"
+  },
+  {
+    "id": "stat_01",
+    "question": "Thống kê số lượng sinh viên theo từng ngành học",
+    "intent": "statistics_query",
+    "cypher": "MATCH (s:Student)\nRETURN s.program_code AS nganh_hoc, count(s) AS so_luong_sinh_vien\nORDER BY so_luong_sinh_vien DESC"
+  },
+  {
+    "id": "stat_02",
+    "question": "Thống kê số lượng sinh viên theo từng cơ sở đào tạo",
+    "intent": "statistics_query",
+    "cypher": "MATCH (s:Student)-[:STUDIES_AT]->(o:Organization)\nRETURN o.org_name AS co_so_dao_tao, count(s) AS so_luong_sinh_vien\nORDER BY so_luong_sinh_vien DESC"
+  },
+  {
+    "id": "class_01",
+    "question": "Lịch học và các buổi học của lớp PRO192_SE1801",
+    "intent": "class_schedule_query",
+    "cypher": "MATCH (c:Class {class_code: 'PRO192_SE1801'})<-[:PART_OF]-(a:Activity)\nOPTIONAL MATCH (p:Person)-[:HAS_ROLE]->(e:Employee)-[:LEADS]->(a)\nRETURN a.activity_name AS buoi_hoc,\n       a.scheduled_date AS ngay_hoc,\n       a.activity_type AS loai_hinh,\n       a.duration_minutes AS thoi_luong_phut,\n       p.full_name AS giang_vien\nORDER BY a.scheduled_date ASC\nLIMIT 50"
+  },
+  {
+    "id": "dyn_019",
+    "question": "sinh viên ngành AI",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nWHERE s.program_code = 'AI'\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       s.enrollment_date AS ngay_nhap_hoc\nLIMIT 50"
+  },
+  {
+    "id": "dyn_020",
+    "question": "sinh viên ngành AI cơ sở hà nội",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[:STUDIES_AT]->(o:Organization)\nWHERE s.program_code = 'AI'\n  AND (toLower(o.org_name) CONTAINS 'hà nội' OR o.org_code = 'FPTU-HN')\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       s.enrollment_date AS ngay_nhap_hoc,\n       o.org_name AS co_so\nLIMIT 50"
+  },
+  {
+    "id": "dyn_021",
+    "question": "Hoàng Quốc bảo học ở cơ sở nào",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[:STUDIES_AT]->(o:Organization)\nWHERE p.full_name = 'Hoàng Quốc Bảo'\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       o.org_name AS co_so\nLIMIT 50"
+  },
+  {
+    "id": "dyn_022",
+    "question": "sinh viên cơ sở hà nội bị cấm thi",
+    "intent": "warning_query",
+    "cypher": "MATCH (c:Class)<-[:PART_OF]-(all_act:Activity)\nWITH c, count(DISTINCT all_act) AS total_sessions\nMATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[part:PARTICIPATED_IN]->(a:Activity)-[:PART_OF]->(c)\nMATCH (s)-[:STUDIES_AT]->(o:Organization)\nWHERE (toLower(o.org_name) CONTAINS 'hà nội' OR o.org_code = 'FPTU-HN')\n  AND part.attendance_status = 'ABSENT'\nWITH p, s, c, o, total_sessions, count(part) AS absent_count,\n     round(100.0 * count(part) / total_sessions, 1) AS absent_rate\nWHERE absent_rate >= 20.0\nRETURN p.full_name AS student_name,\n       s.student_code AS student_code,\n       c.class_code AS class_code,\n       o.org_name AS co_so,\n       absent_count,\n       total_sessions,\n       absent_rate AS `absent_percentage_%`\nORDER BY absent_rate DESC\nLIMIT 50"
+  },
+  {
+    "id": "dyn_023",
+    "question": "sinh viên cơ sở hà nội bị cấm thi",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (c:Class)<-[:PART_OF]-(all_act:Activity)\nWITH c, count(DISTINCT all_act) AS total_sessions\nMATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[part:PARTICIPATED_IN]->(a:Activity)-[:PART_OF]->(c)\nMATCH (s)-[:STUDIES_AT]->(o:Organization)\nWHERE (toLower(o.org_name) CONTAINS 'hà nội' OR o.org_code = 'FPTU-HN')\n  AND part.attendance_status = 'ABSENT'\nWITH p, s, c, o, total_sessions, count(part) AS absent_count,\n     round(100.0 * count(part) / total_sessions, 1) AS absent_rate\nWHERE absent_rate >= 20.0\nRETURN p.full_name AS student_name,\n       s.student_code AS student_code,\n       c.class_code AS class_code,\n       o.org_name AS co_so,\n       absent_count,\n       total_sessions,\n       absent_rate AS `absent_percentage_%`\nORDER BY absent_rate DESC\nLIMIT 50"
+  },
+  {
+    "id": "dyn_024",
+    "question": "ngành AI có bao nhiêu sinh viên",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nWHERE s.program_code = 'AI'\nRETURN count(DISTINCT s.student_code) AS so_sinh_vien\nLIMIT 50"
+  },
+  {
+    "id": "dyn_025",
+    "question": "hồ sơ sinh viên Lê Khắc Tiệp",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nWHERE toLower(p.full_name) CONTAINS toLower('Lê Khắc Tiệp')\nRETURN s.student_code AS ma_sinh_vien, p.full_name AS ho_va_ten, s.program_code AS ma_nganh, s.enrollment_date AS ngay_nhap_hoc\nLIMIT 50"
+  }
+]

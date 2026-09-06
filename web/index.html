@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edu-Graph AI Assistant — Tập đoàn Nguyễn Hoàng (NHG)</title>
+  <meta name="description" content="Hệ thống Trợ lý AI Đa tác nhân Quản lý Đào tạo & Sinh viên trên Cơ sở Dữ liệu Đồ thị Neo4j theo chuẩn NHG Design System." />
+  <link rel="icon" type="image/png" href="/assets/icon-logo.png" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="nhg-navbar">
+    <div class="nhg-brand">
+      <img src="/assets/logo.png" alt="NHG Logo" class="nhg-logo" onerror="this.onerror=null; this.src='/assets/icon-logo.png';" />
+      <div class="nhg-title-block">
+        <span class="nhg-app-name">
+          Edu-Graph Assistant
+          <span style="font-size: 11px; background: var(--nhg-primary-subtle); color: var(--nhg-primary); padding: 2px 8px; border-radius: var(--nhg-radius-full);">Multi-Agent</span>
+        </span>
+        <span class="nhg-app-subtitle">Phòng Đào Tạo & Quản Lý Sinh Viên — Tập đoàn Nguyễn Hoàng</span>
+      </div>
+    </div>
+
+    <div class="nhg-nav-actions">
+      <!-- Status Badges -->
+      <div id="badge-neo4j" class="nhg-badge">
+        <span class="nhg-badge-pulse"></span>
+        <span id="neo4j-status-text">Neo4j: Đang kết nối...</span>
+      </div>
+
+      <!-- Model Selector Dropdown -->
+      <div class="nhg-model-picker" title="Chọn mô hình OLM lượng tử hóa cục bộ">
+        <span class="nhg-picker-icon">🧠</span>
+        <select id="select-model" class="nhg-model-select">
+          <option value="qwen2.5:7b">qwen2.5:7b (7.6B • Q4_K_M Lượng tử)</option>
+          <option value="qwen2.5:3b" selected>qwen2.5:3b (3.1B • Q4_K_M Lượng tử)</option>
+          <option value="qwen2.5:1.5b">qwen2.5:1.5b (1.5B • Q4_K_M Lượng tử)</option>
+        </select>
+      </div>
+
+      <!-- Theme Toggle -->
+      <button id="btn-theme" class="nhg-icon-btn" title="Chuyển chế độ Sáng / Tối" aria-label="Toggle Theme">
+        <span id="theme-icon">🌙</span>
+      </button>
+
+      <!-- Clear Chat -->
+      <button id="btn-clear" class="nhg-icon-btn" title="Làm mới cuộc trò chuyện" aria-label="Clear Chat">
+        <span>🔄</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- App Body Layout -->
+  <main class="nhg-app-body">
+    
+    <!-- Sidebar: Knowledge Stats & Quick Prompts -->
+    <aside class="nhg-sidebar">
+      <div>
+        <div class="nhg-section-header">
+          <span>📊</span>
+          <span>Bộ Nhớ Tri Thức Ngữ Nghĩa</span>
+        </div>
+        <div class="nhg-metrics-grid">
+          <div class="nhg-metric-card">
+            <span class="nhg-metric-val" id="val-fewshot">8</span>
+            <span class="nhg-metric-label">Ví Dụ Mẫu</span>
+          </div>
+          <div class="nhg-metric-card">
+            <span class="nhg-metric-val" id="val-rules">6</span>
+            <span class="nhg-metric-label">Quy Tắc</span>
+          </div>
+          <div class="nhg-metric-card" title="Độ trễ xử lý gần nhất của chuỗi tác nhân">
+            <span class="nhg-metric-val" id="val-latency" style="color: var(--nhg-primary); font-size: 18px;">-- s</span>
+            <span class="nhg-metric-label">Độ Trễ</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="nhg-section-header">
+          <span>⚡</span>
+          <span>Truy Vấn Nghiệp Vụ Nhanh</span>
+        </div>
+        <div class="nhg-chips-list">
+          <button class="nhg-chip" data-prompt="Cảnh báo những sinh viên có nguy cơ cấm thi vì vắng quá 20% môn Java?">
+            <span>🚨</span>
+            <span>Cảnh báo cấm thi vắng > 20%</span>
+          </button>
+          <button class="nhg-chip" data-prompt="Danh sách sinh viên đang bảo lưu trong học kỳ này?">
+            <span>📋</span>
+            <span>Sinh viên đang bảo lưu</span>
+          </button>
+          <button class="nhg-chip" data-prompt="Những sinh viên nào từng bảo lưu rồi quay lại học?">
+            <span>🔄</span>
+            <span>Từng bảo lưu rồi quay lại</span>
+          </button>
+          <button class="nhg-chip" data-prompt="Giảng viên Nguyễn Văn An đang dạy những lớp và buổi học nào?">
+            <span>👨‍🏫</span>
+            <span>Lịch dạy Thầy Nguyễn Văn An</span>
+          </button>
+          <button class="nhg-chip" data-prompt="Ai là sinh viên vừa đi học vừa làm trợ giảng (TA)?">
+            <span>👥</span>
+            <span>Sinh viên kiêm Trợ giảng (TA)</span>
+          </button>
+          <button class="nhg-chip" data-prompt="Xem điểm số và xếp loại của sinh viên Nguyễn Anh Tuấn">
+            <span>📈</span>
+            <span>Điểm thi & xếp loại SV Tuấn</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid var(--nhg-border-subtle); font-size: 11px; color: var(--nhg-text-tertiary); line-height: 1.5;">
+        🔒 <strong>Bảo Mật 100% On-Premise</strong><br>
+        Dữ liệu đào tạo được xử lý nội bộ, không chuyển qua máy chủ đám mây bên thứ ba.
+      </div>
+    </aside>
+
+    <!-- Main Chat Arena -->
+    <section class="nhg-chat-main">
+      <div id="chat-messages" class="nhg-chat-messages">
+        
+        <!-- Welcome Hero -->
+        <div id="welcome-hero" class="nhg-hero-card">
+          <div class="nhg-hero-icon">🎓</div>
+          <h1 class="nhg-hero-title">Trợ Lý AI Đồ Thị Đào Tạo & Quản Lý Sinh Viên</h1>
+          <p class="nhg-hero-desc">
+            Hệ thống ứng dụng <strong>CrewAI</strong>, <strong>Neo4j Graph Database</strong> và <strong>OLM Lượng tử hóa</strong> chạy cục bộ. 
+            Mọi câu hỏi bằng tiếng Việt sẽ được suy luận động 100% (không dùng mẫu cứng Fast-Path) để trích xuất dữ liệu đào tạo chính xác nhất.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Chat Input -->
+      <footer class="nhg-chat-input-bar">
+        <form id="chat-form" class="nhg-input-box">
+          <textarea 
+            id="chat-input" 
+            class="nhg-textarea" 
+            placeholder="Nhập câu hỏi nghiệp vụ đào tạo... (Nhấn Enter để gửi, Shift+Enter xuống dòng)" 
+            rows="1" 
+            required></textarea>
+          <button type="submit" id="btn-send" class="nhg-send-btn" title="Gửi câu hỏi" aria-label="Gửi">
+            <span>➤</span>
+          </button>
+        </form>
+      </footer>
+    </section>
+
+  </main>
+
+  <!-- Modal Feedback Note -->
+  <div id="modal-feedback" class="nhg-modal-overlay">
+    <div class="nhg-modal-card">
+      <div class="nhg-modal-title">
+        <span>💡</span>
+        <span>Góp Ý & Bổ Sung Quy Tắc Nghiệp Vụ</span>
+      </div>
+      <p style="font-size: 13px; color: var(--nhg-text-secondary); line-height: 1.5;">
+        Ý kiến của bạn sẽ được lưu trực tiếp vào <strong>Sổ tay quy tắc của OLM</strong> để không bao giờ lặp lại lỗi này ở các câu hỏi sau.
+      </p>
+
+      <div class="nhg-form-group">
+        <label class="nhg-form-label" for="fb-note">Lý do câu trả lời chưa đúng / Điểm cần lưu ý:</label>
+        <textarea id="fb-note" class="nhg-form-input" rows="3" placeholder="Ví dụ: Khi hỏi sinh viên vắng, không được tính buổi LATE là vắng..."></textarea>
+      </div>
+
+      <div class="nhg-form-group">
+        <label class="nhg-form-label" for="fb-cypher">Câu lệnh Cypher đúng (nếu bạn muốn điều chỉnh thủ công):</label>
+        <textarea id="fb-cypher" class="nhg-form-input" style="font-family: var(--nhg-font-mono); font-size: 12px;" rows="3" placeholder="MATCH (s:Student)..."></textarea>
+      </div>
+
+      <div class="nhg-modal-actions">
+        <button type="button" id="btn-modal-cancel" class="nhg-btn nhg-btn-secondary">Hủy bỏ</button>
+        <button type="button" id="btn-modal-submit" class="nhg-btn nhg-btn-primary">Lưu Vào Sổ Tay OLM</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="nhg-toast">
+    <span id="toast-icon">✅</span>
+    <span id="toast-msg">Thông báo thành công</span>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
