@@ -13,6 +13,7 @@ import unicodedata
 import difflib
 from typing import Dict, Any, List, Optional, Tuple
 from src.db.neo4j_client import neo4j_client
+from src.db.semantic_layer import semantic_layer
 
 logger = logging.getLogger(__name__)
 
@@ -185,45 +186,54 @@ class EntityResolver:
 
         # 1. Thử ánh xạ từ student_name nếu Router đã bóc tách
         target_name = resolved.get("student_name")
+        person_matched = None
         if target_name and isinstance(target_name, str) and target_name.strip():
-            matched = self.find_best_person_match(target_name.strip())
-            if matched:
-                resolved["student_name"] = matched["full_name"]
-                if matched.get("student_code"):
-                    resolved["matched_student_code"] = matched["student_code"]
-                if matched.get("program_code"):
-                    resolved["matched_program_code"] = matched["program_code"]
-                return resolved
-            else:
-                # Nếu không khớp người nào trong DB, xóa trường student_name để tránh ép buộc sai
+            person_matched = self.find_best_person_match(target_name.strip())
+            if not person_matched:
                 resolved.pop("student_name", None)
 
-        # 2. Nếu Router chưa bắt được hoặc bắt sai, thử quét cả câu hỏi loại bỏ stop words
-        matched = self.find_best_person_match(user_question, threshold=0.75)
-        if matched:
-            resolved["student_name"] = matched["full_name"]
-            if matched.get("student_code"):
-                resolved["matched_student_code"] = matched["student_code"]
-            if matched.get("program_code"):
-                resolved["matched_program_code"] = matched["program_code"]
-            return resolved
+        # 2. Nếu chưa bắt được người, thử quét cả câu hỏi loại bỏ stop words
+        if not person_matched:
+            person_matched = self.find_best_person_match(user_question, threshold=0.75)
 
-        # 3. Thử quét các n-gram từ độ dài 3 về 2
-        words = user_question.strip().split()
-        for n in range(min(3, len(words)), 1, -1):
-            for i in range(len(words) - n + 1):
-                phrase = " ".join(words[i:i+n])
-                phrase_clean = remove_vietnamese_accents(phrase)
-                if phrase_clean in STOP_WORDS or set(phrase_clean.split()).issubset(STOP_WORDS):
-                    continue
-                matched = self.find_best_person_match(phrase, threshold=0.8)
-                if matched:
-                    resolved["student_name"] = matched["full_name"]
-                    if matched.get("student_code"):
-                        resolved["matched_student_code"] = matched["student_code"]
-                    if matched.get("program_code"):
-                        resolved["matched_program_code"] = matched["program_code"]
-                    return resolved
+        # 3. Thử quét các n-gram nếu vẫn chưa tìm thấy
+        if not person_matched:
+            words = user_question.strip().split()
+            for n in range(min(3, len(words)), 1, -1):
+                for i in range(len(words) - n + 1):
+                    phrase = " ".join(words[i:i+n])
+                    phrase_clean = remove_vietnamese_accents(phrase)
+                    if phrase_clean in STOP_WORDS or set(phrase_clean.split()).issubset(STOP_WORDS):
+                        continue
+                    matched = self.find_best_person_match(phrase, threshold=0.8)
+                    if matched:
+                        person_matched = matched
+                        break
+                if person_matched:
+                    break
+
+        # Gán thông tin người nếu tìm thấy
+        if person_matched:
+            resolved["student_name"] = person_matched["full_name"]
+            if person_matched.get("student_code"):
+                resolved["matched_student_code"] = person_matched["student_code"]
+            if person_matched.get("program_code"):
+                resolved["matched_program_code"] = person_matched["program_code"]
+
+        # 4. Ánh xạ Ngành học thông qua Semantic Layer (ví dụ: 'ngành kỹ thuật phần mềm' -> 'SE')
+        major_text = resolved.get("program_code") or user_question
+        major_info = semantic_layer.resolve_major(str(major_text))
+        if major_info:
+            resolved["program_code"] = major_info["major_code"]
+            resolved["major_name"] = major_info["major_name_vi"]
+            resolved["major_name_en"] = major_info["major_name_en"]
+
+        # 5. Ánh xạ Cơ sở đào tạo thông qua Semantic Layer (ví dụ: 'ở hòa lạc' -> 'FPTU-HN')
+        campus_text = resolved.get("campus") or user_question
+        campus_info = semantic_layer.resolve_campus(str(campus_text))
+        if campus_info:
+            resolved["campus_code"] = campus_info["org_code"]
+            resolved["campus_name"] = campus_info["org_name"]
 
         return resolved
 

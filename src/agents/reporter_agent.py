@@ -21,10 +21,37 @@ class ReporterAgent:
 
         records: List[Dict[str, Any]] = query_result.get("records", [])
         if not records:
+            from src.db.semantic_layer import semantic_layer
+            semantic_explanation = semantic_layer.explain_concept(user_question)
+            if semantic_explanation:
+                return (
+                    f"### 💡 THÔNG TIN NGHIỆP VỤ (SEMANTIC LAYER):\n\n"
+                    f"{semantic_explanation}\n\n"
+                    f"---\n"
+                    f"<details><summary>🔍 Chi tiết câu lệnh Cypher đã thực thi</summary>\n\n```cypher\n{query_result.get('cypher', '')}\n```\n</details>"
+                )
             return (
                 f"ℹ️ **Kết quả tra cứu**: Không tìm thấy dữ liệu nào phù hợp với câu hỏi của bạn trong hệ thống.\n\n"
                 f"- **Câu lệnh Cypher đã thực thi**:\n```cypher\n{query_result.get('cypher', '')}\n```"
             )
+
+        # Kiểm tra nếu là kết quả tra cứu định nghĩa ngành học
+        first_row = records[0]
+        if "ma_nganh" in first_row and ("ten_nganh" in first_row or "ten_tieng_anh" in first_row):
+            card_parts = [f"### 🎓 THÔNG TIN CHUYÊN NGÀNH:"]
+            for r in records:
+                card_parts.append(f"- **Mã ngành**: `{r.get('ma_nganh')}`")
+                if r.get("ten_nganh"):
+                    card_parts.append(f"- **Tên tiếng Việt**: **{r.get('ten_nganh')}**")
+                if r.get("ten_tieng_anh"):
+                    card_parts.append(f"- **Tên tiếng Anh**: *{r.get('ten_tieng_anh')}*")
+                if r.get("van_bang"):
+                    card_parts.append(f"- **Văn bằng tốt nghiệp**: {r.get('van_bang')}")
+                if r.get("mo_ta"):
+                    card_parts.append(f"- **Mô tả nghiệp vụ**: {r.get('mo_ta')}")
+            card_parts.append("")
+            card_parts.append(f"<details><summary>🔍 Xem câu lệnh Cypher đã sinh</summary>\n\n```cypher\n{query_result.get('cypher', '')}\n```\n</details>")
+            return "\n".join(card_parts)
 
         # Trích xuất tiêu đề cột và hàng
         headers = list(records[0].keys())

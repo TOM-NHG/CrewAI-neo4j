@@ -15,6 +15,7 @@ SYSTEM_PROMPT = """Bạn là Trợ lý Phân tích Ý định & Thực thể cho
 Nhiệm vụ của bạn là đọc câu hỏi của người dùng và trích xuất thông tin dưới dạng JSON chuẩn.
 
 Các miền ý định (intent):
+- "knowledge_query": Tra cứu khái niệm, định nghĩa mã ngành, mã cơ sở, giải nghĩa thuật ngữ học vụ (ví dụ: "mã SE là ngành gì", "FPTU-HN là cơ sở nào", "bảo lưu là gì").
 - "attendance_query": Tra cứu điểm danh, vắng mặt, đi muộn.
 - "warning_query": Cảnh báo sinh viên có nguy cơ cấm thi, học vụ.
 - "status_query": Tra cứu trạng thái học vụ (bảo lưu, thôi học, tốt nghiệp).
@@ -81,7 +82,9 @@ class RouterAgent:
     def _heuristic_fallback(self, question: str) -> Dict[str, Any]:
         q_lower = question.lower()
         intent = "general_query"
-        if any(k in q_lower for k in ["vắng", "điểm danh", "nghỉ học", "chuyên cần"]):
+        if any(k in q_lower for k in ["là ngành gì", "nghĩa là gì", "viết tắt", "là gì", "ở đâu"]):
+            intent = "knowledge_query"
+        elif any(k in q_lower for k in ["vắng", "điểm danh", "nghỉ học", "chuyên cần"]):
             intent = "attendance_query"
         elif any(k in q_lower for k in ["cấm thi", "nguy cơ", "cảnh báo"]):
             intent = "warning_query"

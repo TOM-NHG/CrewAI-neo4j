@@ -26,6 +26,10 @@ COMPACT_GRAPH_ONTOLOGY = """
 
 5. Lịch sử trạng thái học vụ (Quan hệ vòng lặp trên Student):
    (:Student) -[:HAS_STATUS {status: 'ACTIVE' | 'SUSPENDED' | 'GRADUATED' | 'DROPOUT', effective_from, effective_to, note}]-> (:Student)
+
+6. Ngành đào tạo (Major Ontology):
+   (:Major {major_code, major_name, major_name_en, degree, faculty, description})
+   (:Student) -[:MAJORS_IN]-> (:Major)
 """
 
 BUSINESS_SEMANTIC_RULES = """
@@ -61,11 +65,9 @@ BUSINESS_SEMANTIC_RULES = """
 10. "Tìm kiếm tên không phân biệt hoa thường":
     Sử dụng toLower(p.full_name) CONTAINS toLower('...') hoặc p.full_name =~ '(?i).*...*'
 
-11. "Ngành học của sinh viên (SE, AI, IA, BA, CS, ...)":
-    Được lưu TRỰC TIẾP tại thuộc tính s.program_code trên nhãn Student (ví dụ: s.program_code = 'SE').
-    TUYỆT ĐỐI KHÔNG tìm ngành qua (:Organization) hay (:Major).
-    Tổ chức (:Organization) chỉ đại diện cho Trường/Phân hiệu/Khoa (org_type: 'UNIVERSITY', 'FACULTY', 'CORPORATION').
-    Mẫu truy vấn chuẩn:
+11. "Ngành học của sinh viên (SE, AI, IA, BA, GD, IS, ...)":
+    Được lưu TRỰC TIẾP tại thuộc tính s.program_code trên nhãn Student (ví dụ: s.program_code = 'SE') VÀ liên kết tới nút (:Major) qua (s)-[:MAJORS_IN]->(m:Major {major_code: s.program_code}).
+    Mẫu tìm sinh viên theo ngành:
     MATCH (p:Person)-[:HAS_ROLE]->(s:Student)
     WHERE s.program_code = 'SE'
     RETURN s.student_code AS ma_sinh_vien, p.full_name AS ho_va_ten, s.program_code AS ma_nganh, s.enrollment_date AS ngay_nhap_hoc
@@ -106,6 +108,12 @@ BUSINESS_SEMANTIC_RULES = """
       MATCH (s:Student)
       WHERE s.program_code = 'SE'
       RETURN count(DISTINCT s) AS so_sinh_vien_se
+
+16. "Tra cứu khái niệm / Định nghĩa ngành học (Mã SE là ngành gì, ngành AI là gì...)":
+    BẮT BUỘC truy vấn trực tiếp vào nhãn (:Major):
+    MATCH (m:Major {major_code: 'SE'})
+    RETURN m.major_code AS ma_nganh, m.major_name AS ten_nganh, m.major_name_en AS ten_tieng_anh, m.degree AS van_bang, m.description AS mo_ta
+    TUYỆT ĐỐI KHÔNG truy vấn bảng Student khi người dùng chỉ hỏi khái niệm/mã ngành!
 """
 
 
@@ -120,4 +128,5 @@ class SchemaProvider:
 
     @classmethod
     def get_full_schema_context(cls) -> str:
-        return f"{cls.get_compact_ontology()}\n\n{cls.get_business_rules()}"
+        from src.db.semantic_layer import semantic_layer
+        return f"{cls.get_compact_ontology()}\n\n{cls.get_business_rules()}\n\n{semantic_layer.get_semantic_context_for_prompt()}"

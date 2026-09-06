@@ -1,5 +1,17 @@
 [
   {
+    "id": "knowledge_major_01",
+    "question": "mã SE là ngành gì",
+    "intent": "knowledge_query",
+    "cypher": "MATCH (m:Major {major_code: 'SE'})\nRETURN m.major_code AS ma_nganh, m.major_name AS ten_nganh, m.major_name_en AS ten_tieng_anh, m.degree AS van_bang, m.description AS mo_ta"
+  },
+  {
+    "id": "knowledge_major_02",
+    "question": "ngành kỹ thuật phần mềm mã là gì",
+    "intent": "knowledge_query",
+    "cypher": "MATCH (m:Major)\nWHERE toLower(m.major_name) CONTAINS 'kỹ thuật phần mềm' OR m.major_code = 'SE'\nRETURN m.major_code AS ma_nganh, m.major_name AS ten_nganh, m.major_name_en AS ten_tieng_anh, m.description AS mo_ta"
+  },
+  {
     "id": "att_01",
     "question": "Tìm những sinh viên vắng mặt ở lớp PRO192_SE1801 ngày 2024-09-02",
     "intent": "attendance_query",
@@ -160,5 +172,23 @@
     "question": "Hồ sơ sinh viên Đặng Quốc Huy",
     "intent": "verified_user_query",
     "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)\nWHERE toLower(p.full_name) CONTAINS toLower('Đặng Quốc Huy')\nRETURN s.student_code AS ma_sinh_vien,\n       p.full_name AS ho_va_ten,\n       s.program_code AS ma_nganh,\n       s.enrollment_date AS ngay_nhap_hoc,\n       p.email AS email,\n       p.phone AS so_dien_thoai,\n       s.is_active AS trang_thai\nLIMIT 50"
+  },
+  {
+    "id": "dyn_028",
+    "question": "số sinh viên đang bảo lưu",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[st:HAS_STATUS]->(s)\nWHERE st.status = 'SUSPENDED' AND st.effective_to IS NULL\nRETURN count(DISTINCT s) AS so_sinh_vien_dang_bao_luu\nLIMIT 50"
+  },
+  {
+    "id": "dyn_029",
+    "question": "sinh viên nào đang bảo lưu",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[st:HAS_STATUS]->(s)\nWHERE st.status = 'SUSPENDED' AND st.effective_to IS NULL\nRETURN p.full_name AS student_name, s.student_code AS student_code, st.effective_from AS suspended_from, st.note AS reason\nLIMIT 50"
+  },
+  {
+    "id": "dyn_030",
+    "question": "Hồ Nhật nam đang học cơ sở nào",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[:STUDIES_AT]->(o:Organization)\nWHERE p.full_name = 'Hồ Nhật Nam'\nRETURN s.student_code AS ma_sinh_vien, o.org_name AS co_so\nLIMIT 50"
   }
 ]
