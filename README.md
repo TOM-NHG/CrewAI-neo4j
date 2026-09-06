@@ -67,23 +67,24 @@ flowchart TD
 
 | Tác nhân | Vai trò & Nhiệm vụ |
 | :--- | :--- |
-| **🎯 Router Agent** | Phân loại ý định nghiệp vụ (`attendance_query`, `warning_query`, `status_query`, `lecturer_query`, `grade_query`, `general_query`) và bóc tách thực thể thô. |
-| **🔍 Entity Resolver** | Ánh xạ và chuẩn hóa thực thể đối chiếu trực tiếp với dữ liệu Neo4j (khử dấu, sửa lỗi chính tả, hoán vị họ tên). |
-| **💻 Cypher Specialist Agent** | Tổng hợp tri thức từ Ontology, Sổ tay quy tắc và Kho Few-shot mẫu để sinh câu lệnh Cypher chuẩn Neo4j 5.x. |
+| **🎯 Router Agent** | Phân loại ý định nghiệp vụ (`knowledge_query`, `attendance_query`, `warning_query`, `status_query`, `lecturer_query`, `grade_query`, `general_query`) và bóc tách thực thể thô. |
+| **🔍 Entity Resolver & Semantic Layer** | Ánh xạ và chuẩn hóa thực thể đối chiếu trực tiếp với dữ liệu Neo4j (khử dấu, sửa lỗi chính tả, hoán vị họ tên) kết hợp bộ từ điển danh mục (Business Glossary) và từ đồng nghĩa ngành học, cơ sở. |
+| **💻 Cypher Specialist Agent** | Tổng hợp tri thức từ Ontology, Sổ tay quy tắc, Lớp Ngữ Nghĩa và Kho Few-shot mẫu để sinh câu lệnh Cypher chuẩn Neo4j 5.x. |
 | **🛡️ Validator Agent** | Kiểm tra an toàn Read-Only, tự động thêm LIMIT, tự sửa lỗi cú pháp (Self-Correction) và tự phục hồi khi truy vấn tên trả về 0 kết quả (Self-Healing). |
-| **📊 Reporter Agent** | Tổng hợp kết quả bản ghi thành bảng biểu Markdown trực quan, tóm tắt chỉ số và đưa ra nhận định chuyên môn. |
+| **📊 Reporter Agent** | Tổng hợp kết quả bản ghi thành bảng biểu Markdown trực quan, thẻ thông tin chuyên ngành (Concept Cards), tóm tắt chỉ số và đưa ra nhận định chuyên môn. |
 
 ---
 
 ## 🗺️ Mô Hình Dữ Liệu Đồ Thị (Party Model Ontology)
 
-Hệ thống áp dụng mô hình thực thể Party Model chuẩn mực trong cơ sở dữ liệu đồ thị:
+Hệ thống áp dụng mô hình thực thể Party Model kết hợp Đồ thị Ngành học (Major Ontology) chuẩn mực trong cơ sở dữ liệu đồ thị:
 
 ```
 (:Person {national_id, full_name, date_of_birth, gender, email, phone})
    ├── [:HAS_ROLE] ──► (:Student {student_code, enrollment_date, program_code, is_active})
    └── [:HAS_ROLE] ──► (:Employee {employee_code, hire_date, is_active})
 
+(:Student) ──[:MAJORS_IN]──► (:Major {major_code, major_name, major_name_en, degree, faculty})
 (:Student) ──[:STUDIES_AT]──► (:Organization {org_code, org_name, org_type})
 (:Student) ──[:ENROLLED_IN]──► (:Class {class_code, class_name, max_capacity})
 (:Student) ──[:PARTICIPATED_IN {attendance_status, quiz_score, grade}]──► (:Activity)
@@ -94,6 +95,15 @@ Hệ thống áp dụng mô hình thực thể Party Model chuẩn mực trong c
 (:Activity) ──[:PART_OF]──► (:Class)
 (:Class) ──[:OFFERED_IN]──► (:AcademicPeriod)
 ```
+
+---
+
+## 📜 Tài Liệu & Lịch Sử Dự Án
+
+- Chi tiết các giai đoạn tiến hóa kiến trúc, giải quyết Semantic Gap và nhật ký thay đổi kỹ thuật:
+  👉 **[Xem Báo Cáo Lịch Sử Dự Án & Changelog Chi Tiết](docs/PROJECT_HISTORY.md)**
+- Đặc tả kiến trúc kỹ thuật: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+- Đặc tả yêu cầu dự án: **[docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md)**
 
 ---
 
