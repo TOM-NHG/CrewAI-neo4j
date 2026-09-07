@@ -196,5 +196,11 @@
     "question": "Hồ Nhật nam đang học cơ sở nào",
     "intent": "verified_user_query",
     "cypher": "MATCH (p:Person)-[:HAS_ROLE]->(s:Student)-[:STUDIES_AT]->(o:Organization)\nWHERE p.full_name = 'Hồ Nhật Nam'\nRETURN s.student_code AS ma_sinh_vien, o.org_name AS co_so\nLIMIT 50"
+  },
+  {
+    "id": "dyn_034",
+    "question": "Sinh viên tham gia hoạt động nghiên cứu khoa học",
+    "intent": "verified_user_query",
+    "cypher": "MATCH (s:Student)-[:JOINS]->(r:Research) RETURN s;"
   }
 ]

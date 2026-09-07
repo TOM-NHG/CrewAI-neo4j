@@ -435,6 +435,13 @@ def generate_and_seed_rich_data():
             r.grade = 'B+'
     """)
 
+    # 9.5 Nạp Ontology chuyên ngành và quan hệ MAJORS_IN
+    try:
+        from scripts.seed_major_ontology import seed_majors
+        seed_majors()
+    except Exception as e:
+        logger.warning("Không thể nạp major ontology: %s", e)
+
     # 10. KIỂM KÊ DỮ LIỆU TỔNG THỂ SAU KHI NẠP BỘ SIÊU ĐA DẠNG
     logger.info("\n📊 BÁO CÁO TỔNG QUAN DỮ LIỆU ĐA DẠNG MỚI TRONG NEO4J:")
     res_nodes = neo4j_client.execute_read("""

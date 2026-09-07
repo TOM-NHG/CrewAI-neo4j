@@ -115,76 +115,98 @@ Hệ thống áp dụng mô hình thực thể Party Model kết hợp Đồ th�
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy
+## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy Từng Bước
 
-### 1. Clone Kho Mã Nguồn
+Bạn có thể chọn **Cách 1 (Tự động 1-Click)** hoặc **Cách 2 (Thủ công từng bước)**:
+
+---
+
+### ⚡ CÁCH 1: Tự Động 1-Click (Khuyên Dùng Trên Windows)
+
+Dành cho người mới hoặc đồng nghiệp muốn thiết lập toàn bộ môi trường và nạp **100% dữ liệu** chỉ trong 1 thao tác:
+
+1. **Bật Neo4j**: Khởi động database trên **Neo4j Desktop** hoặc **Docker**.
+2. **Chạy file tự động**: Click đúp vào file **`setup_colleague.bat`** (hoặc mở cmd chạy `setup_colleague.bat`).
+3. **Mở giao diện Web**:
+   ```bash
+   .venv\Scripts\python src\web_server.py
+   ```
+   👉 Truy cập: **`http://localhost:8080`**
+
+---
+
+### 🛠️ CÁCH 2: Cài Đặt Thủ Công Từng Bước (Step-by-Step)
+
+#### Bước 1: Clone Kho Mã Nguồn
 ```bash
 git clone https://github.com/TOM-NHG/CrewAI-neo4j.git
 cd CrewAI-neo4j
 ```
 
-### 2. Thiết Lập Môi Trường Ảo & Cài Đặt Thư Viện
+#### Bước 2: Tạo Môi Trường Ảo & Kích Hoạt
 ```bash
 # Tạo môi trường ảo
 python -m venv .venv
 
-# Kích hoạt trên Windows:
-.\.venv\Scripts\activate
-# Kích hoạt trên Linux/macOS:
-# source .venv/bin/activate
+# Kích hoạt trên Windows (Command Prompt hoặc PowerShell):
+.venv\Scripts\activate
 
-# Cài đặt thư viện phụ thuộc
+# Hoặc kích hoạt trên Linux/macOS:
+# source .venv/bin/activate
+```
+
+#### Bước 3: Cài Đặt Các Thư Viện Phụ Thuộc
+```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 3. Cấu Hình Biến Môi Trường (`.env`)
-Sao chép từ file mẫu và chỉnh sửa thông số kết nối nếu cần:
+#### Bước 4: Thiết Lập File Cấu Hình (`.env`)
+Sao chép cấu hình mẫu từ `.env.example`:
 ```bash
-cp .env.example .env
+# Trên Windows cmd:
+copy .env.example .env
+
+# Trên Linux / macOS / PowerShell:
+# cp .env.example .env
 ```
+> ⚠️ **Lưu ý**: Mở file `.env` và đảm bảo mật khẩu `NEO4J_PASSWORD` khớp với mật khẩu database Neo4j của bạn (mặc định là `your_password`).
 
-Nội dung cấu hình mặc định trong `.env`:
-```ini
-# Neo4j Database
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=your_password
-NEO4J_DATABASE=neo4j
-
-# Local Ollama
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=qwen2.5:3b
-DEFAULT_QUERY_LIMIT=50
-MAX_CYPHER_RETRIES=2
-```
-
-### 4. Kéo Mô Hình Ollama Cục Bộ
+#### Bước 5: (Tùy chọn) Kéo Model Ollama Chạy Cục Bộ
+Nếu bạn muốn dùng Local LLM Qwen 2.5:
 ```bash
-# Mô hình 3B (nhẹ, phản hồi nhanh ~15-20s trên CPU/GPU thông thường)
+# Mô hình 3B (nhẹ, nhanh, khuyên dùng):
 ollama pull qwen2.5:3b
 
-# Mô hình 7B (suy luận sâu, chất lượng cao nhất)
+# Hoặc mô hình 7B (suy luận sâu hơn):
 ollama pull qwen2.5:7b
 ```
+*(Nếu chưa cài Ollama, hệ thống vẫn tự kích hoạt chế độ Fallback heuristic để chạy thử nghiệm bình thường).*
 
-### 5. Nạp Dữ Liệu Mẫu Vào Neo4j
-Chạy tập lệnh sinh dữ liệu thực tế (hơn 60 Person, 48 Student, 14 Class, 45 Activity và 190+ quan hệ điểm danh):
+#### Bước 6: Nạp 100% Dữ Liệu Vào Neo4j
+Chạy script tự động hóa tổng lực để làm sạch và nạp toàn bộ Schema, 80 sinh viên mẫu, lớp học, điểm danh, điểm số và Ontology chuyên ngành:
 ```bash
 python generate_rich_data.py
 ```
 
-### 6. Khởi Chạy Ứng Dụng
-
-#### Cách A: Khởi chạy Giao Diện Web (Khuyên dùng)
+#### Bước 7: Chạy Kiểm Thử Xác Nhận Tính Đồng Bộ
+Chạy bộ test tích hợp để đảm bảo toàn bộ pipeline 4-Agent, Guardrail, Few-shot và Neo4j hoạt động 100% Pass:
 ```bash
-python src/web_server.py
+python tests/test_pipeline.py
 ```
-👉 Mở trình duyệt và truy cập: **`http://localhost:8080`**
 
-#### Cách B: Chạy Chế Độ Dòng Lệnh (CLI Interactive Mode)
-```bash
-python main.py
-```
+#### Bước 8: Khởi Chạy Ứng Dụng
+
+* **Lựa chọn 1: Giao diện Web NHG Design System (Khuyên dùng)**:
+  ```bash
+  python src/web_server.py
+  ```
+  👉 Mở trình duyệt và truy cập: **`http://localhost:8080`**
+
+* **Lựa chọn 2: Giao diện Dòng lệnh Tương tác (CLI Mode)**:
+  ```bash
+  python main.py
+  ```
 
 ---
 
@@ -255,8 +277,12 @@ CrewAI-neo4j/
 ├── web/                                 # Giao diện Web (NHG Design System)
 │   ├── index.html                       # Trang chủ Chatbot
 │   ├── style.css                        # CSS Design System & Micro-animations
-│   └── app.js                           # Logic Frontend, Live Timer & Model Picker
-├── generate_rich_data.py                # Script tạo sinh dữ liệu mẫu đa dạng
+├── tests/                               # Kiểm thử tích hợp tự động
+│   └── test_pipeline.py                 # Bộ kiểm thử End-to-End pipeline 4-Agent
+├── generate_rich_data.py                # Script tạo sinh dữ liệu mẫu đa dạng (100% Data)
+├── reset_and_seed.py                    # Script làm sạch và nạp dữ liệu gốc
+├── setup_colleague.bat                  # Script 1-Click tự động cài đặt & nạp Data cho đồng nghiệp
+├── HUONG_DAN_DONG_NGHIEP.md             # Hướng dẫn chi tiết chia sẻ data không cần server
 ├── requirements.txt                     # Danh sách thư viện phụ thuộc
 └── README.md                            # Tài liệu tổng quan dự án
 ```

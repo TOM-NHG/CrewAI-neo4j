@@ -1,0 +1,20 @@
+# Environment & Secrets
+.env
+.venv/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# BMAD temporary output
+_bmad-output/
