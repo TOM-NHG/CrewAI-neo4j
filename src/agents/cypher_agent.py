@@ -6,8 +6,16 @@ Hỗ trợ vòng lặp tự sửa lỗi (Self-Correction) nếu câu Cypher bị
 
 import re
 import logging
+import sys
+from pathlib import Path
 from typing import Dict, Any, Optional
 import requests
+
+# Đảm bảo đường dẫn gốc của project có trong sys.path khi chạy trực tiếp file
+project_root = Path(__file__).resolve().parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 from src.config import settings
 from src.db.schema_provider import SchemaProvider
 from src.memory.few_shot_pool import few_shot_pool

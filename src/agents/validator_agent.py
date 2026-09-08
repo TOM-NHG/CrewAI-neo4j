@@ -5,7 +5,15 @@ Thẩm định an toàn (Read-Only), kiểm tra cú pháp và điều phối vò
 
 import re
 import logging
+import sys
+from pathlib import Path
 from typing import Dict, Any
+
+# Đảm bảo đường dẫn gốc của project có trong sys.path khi chạy trực tiếp file
+project_root = Path(__file__).resolve().parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 from src.config import settings
 from src.db.neo4j_client import neo4j_client
 from src.agents.cypher_agent import cypher_agent

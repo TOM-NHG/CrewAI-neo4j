@@ -5,8 +5,16 @@ Phân tích câu hỏi tiếng Việt, nhận diện ý định và bóc tách c
 
 import json
 import logging
+import sys
+from pathlib import Path
 from typing import Dict, Any
 import requests
+
+# Đảm bảo đường dẫn gốc của project có trong sys.path khi chạy trực tiếp file từ bất kỳ thư mục nào
+project_root = Path(__file__).resolve().parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 from src.config import settings
 
 logger = logging.getLogger(__name__)
@@ -104,3 +112,45 @@ class RouterAgent:
 
 
 router_agent = RouterAgent()
+
+
+if __name__ == "__main__":
+    import pprint
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+    print("=" * 80)
+    print("🎯 DEMO CHẠY ROUTER AGENT (INTENT & SEMANTIC EXTRACTOR)")
+    print(f"   Model: {router_agent.model} | Endpoint: {router_agent.base_url}")
+    print("=" * 80)
+
+    sample_questions = [
+        "Mã SE là ngành gì?",
+        "Cảnh báo những sinh viên có nguy cơ cấm thi vì vắng quá 20% môn Java?",
+        "Sinh viên Duyên Đặng nghỉ học bao nhiêu buổi rồi?",
+        "Danh sách sinh viên đang bảo lưu trong học kỳ này?",
+        "Giảng viên Nguyễn Văn An đang dạy những lớp nào?",
+        "Điểm trung bình của sinh viên SE180001 là bao nhiêu?",
+    ]
+
+    print("\n--- 1. CHẠY BỘ CÂU HỎI MẪU ---")
+    for idx, q in enumerate(sample_questions, 1):
+        print(f"\n[{idx}] Câu hỏi: {q}")
+        res = router_agent.analyze(q)
+        print("    👉 Kết quả phân tích:")
+        print(json.dumps(res, ensure_ascii=False, indent=6))
+
+    print("\n" + "=" * 80)
+    print("--- 2. CHẾ ĐỘ NHẬP CÂU HỎI TƯƠNG TÁC (Gõ 'exit' hoặc 'quit' để thoát) ---")
+    try:
+        while True:
+            user_input = input("\nNhập câu hỏi của bạn: ").strip()
+            if not user_input:
+                continue
+            if user_input.lower() in ["exit", "quit", "q"]:
+                print("Đã thoát.")
+                break
+            result = router_agent.analyze(user_input)
+            print("👉 Kết quả phân tích JSON:")
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+    except (KeyboardInterrupt, EOFError):
+        print("\nĐã dừng.")
