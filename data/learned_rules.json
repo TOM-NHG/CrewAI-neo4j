@@ -7,5 +7,6 @@
   "Ngành học sinh viên (SE, AI, IA, BA, ...) được lưu TRỰC TIẾP tại s.program_code trên nút Student. TUYỆT ĐỐI KHÔNG tìm ngành qua (:Organization) hay (:Major) vì Organization chỉ là trường/phân hiệu/khoa. Mẫu chuẩn: MATCH (p:Person)-[:HAS_ROLE]->(s:Student) WHERE s.program_code = 'SE'.",
   "Cơ sở đào tạo (Hà Nội, TP.HCM, Đà Nẵng, Cần Thơ, Quy Nhơn) nối qua (s:Student)-[:STUDIES_AT]->(o:Organization). BẮT BUỘC dùng toLower(o.org_name) CONTAINS '...' hoặc o.org_code ('FPTU-HN', 'FPTU-HCM', 'FPTU-DN'). TUYỆT ĐỐI KHÔNG so sánh bằng tuyệt đối o.org_name = 'Hà Nội'.",
   "Trường ngày tháng (s.enrollment_date, a.scheduled_date) là kiểu Date trong Neo4j. TUYỆT ĐỐI KHÔNG tự bịa điều kiện thời gian (như s.enrollment_date >= ...) nếu câu hỏi không yêu cầu.",
-  "Mọi câu lệnh truy vấn danh sách đều phải có mệnh đề LIMIT (mặc định LIMIT 50 nếu người dùng không yêu cầu số lượng cụ thể)."
+  "Mọi câu lệnh truy vấn danh sách đều phải có mệnh đề LIMIT (mặc định LIMIT 50 nếu người dùng không yêu cầu số lượng cụ thể).",
+  "Không có nhãn Research trong đồ thị hiện tại"
 ]
